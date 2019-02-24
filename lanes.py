@@ -4,7 +4,41 @@ import matplotlib.pyplot as plt
 
 image = cv2.imread('test_image.jpg')
 
+def make_coordinates(image,line_parameter):
+    slope, intercept = line_parameter
+    y1 = image.shape[0]
+    y2 = int(y1*(3/5))  
+    # Note : y = mx+b
+    # x = (y-b)/m
+    x1 =int((y1-intercept)/slope)
+    x2 =int((y2-intercept)/slope)
+    return np.array([x1,y1,x2,y2])
 
+
+def average_slope_intercept(image,lines):
+    left_fit = []
+    right_fit = []
+    for line in lines: # each line is 2d space with 1R-4C
+            x1,y1,x2,y2 = line.reshape(4) # put each line 1 D array
+            #create 1 dimension polynomial with this class
+            parameters = np.polyfit((x1,x2),(y1,y2), 1) # 1 degree polynomial
+            # Y= mx + c
+            slope = parameters[0]
+            intercept = parameters[1]
+#  Note : lane will be like this ->   / \  
+# / -> x increase y decrease -> its in numpy
+            if slope < 0:
+                left_fit.append((slope,intercept))
+            else:
+                 right_fit.append((slope,intercept))
+              # calculate avarge 
+              
+    left_fit_average = np.average(left_fit,axis=0) # axis ->0 calculate vertically coumn wise
+    right_fit_average = np.average(right_fit,axis=0)
+    left_line = make_coordinates(image, left_fit_average) 
+    right_line = make_coordinates(image, right_fit_average) 
+    return np.array([left_line,right_line])            
+                 
 def display_lines(image,lines):
     lines_image = np.zeros_like(image)
     if lines is not None:
@@ -71,8 +105,8 @@ def region_of_interest(image):
 # image is mutable variablexxxxxx
 
 lane_image = np.copy(image)
-canny = canny(lane_image)
-cropped_image = region_of_interest(canny)
+canny_image = canny(lane_image)
+cropped_image = region_of_interest(canny_image)
 lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLength=50, maxLineGap=5)
 # 2 precisin
 # np.pi/180 is theta
@@ -81,7 +115,9 @@ lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLe
 # minLineLength = 40 any line with less than 40 PX are rejected
 #  maxLineGap  This indicates the maximum distance in pixels between segmented lines which we will allow to be connected
 
-line_image = display_lines(lane_image,lines)
+averaged_lines = average_slope_intercept(lane_image, lines)
+
+line_image = display_lines(lane_image,averaged_lines)
 
 # Add the lines
 # lane_image and line_image have same dimension and hence mergin this 2 image, original wit intensity 0.8 and lines image 1 so that line will be clearly visibale in 
