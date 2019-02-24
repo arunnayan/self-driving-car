@@ -104,10 +104,10 @@ def region_of_interest(image):
 # creating a copy of an image using numpy 
 # image is mutable variablexxxxxx
 
-lane_image = np.copy(image)
-canny_image = canny(lane_image)
-cropped_image = region_of_interest(canny_image)
-lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLength=50, maxLineGap=5)
+###lane_image = np.copy(image)
+###canny_image = canny(lane_image)
+###cropped_image = region_of_interest(canny_image)
+###lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLength=50, maxLineGap=5)
 # 2 precisin
 # np.pi/180 is theta
 # 100 - threhold criteria in bin
@@ -115,17 +115,48 @@ lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLe
 # minLineLength = 40 any line with less than 40 PX are rejected
 #  maxLineGap  This indicates the maximum distance in pixels between segmented lines which we will allow to be connected
 
-averaged_lines = average_slope_intercept(lane_image, lines)
+###averaged_lines = average_slope_intercept(lane_image, lines)
 
-line_image = display_lines(lane_image,averaged_lines)
+###line_image = display_lines(lane_image,averaged_lines)
 
 # Add the lines
 # lane_image and line_image have same dimension and hence mergin this 2 image, original wit intensity 0.8 and lines image 1 so that line will be clearly visibale in 
 # the lane_image
-combo_image = cv2.addWeighted(lane_image,0.8, line_image, 1, 1)
+###combo_image = cv2.addWeighted(lane_image,0.8, line_image, 1, 1)
 
  
-cv2.imshow("canny", combo_image)
+###cv2.imshow("canny", combo_image)
 #plt.imshow(canny)
 #plt.show()
-cv2.waitKey(0)
+###cv2.waitKey(0)
+
+cap = cv2.VideoCapture("test2.mp4")
+
+while (cap.isOpened()):
+    _, frame = cap.read()
+    lane_image = np.copy(frame)
+    canny_image = canny(lane_image)
+    cropped_image = region_of_interest(canny_image)
+    lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLength=50, maxLineGap=5)
+    averaged_lines = average_slope_intercept(lane_image, lines)
+    line_image = display_lines(frame,averaged_lines)
+    combo_image = cv2.addWeighted(frame,0.8, line_image, 1, 1)
+    cv2.imshow("canny", combo_image)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+    
+cap.release()
+cv2.destroyAllWindows()    
+    
+
+
+
+
+
+
+
+
+
+
+
+
