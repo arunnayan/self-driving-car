@@ -5,7 +5,13 @@ import matplotlib.pyplot as plt
 image = cv2.imread('test_image.jpg')
 
 
-
+def display_lines(image,lines):
+    lines_image = np.zeros_like(image)
+    if lines is not None:
+        for line in lines: # each line is 2d space with 1R-4C
+            x1,y1,x2,y2 = line.reshape(4) # put each line 1 D array
+            cv2.line(lines_image, (x1,y1),(x2,y2),(255,0,0),10)
+    return lines_image;
 
 def canny(image):
     # Current image is RGB (3 Dimension [0-255] for each of RGB)
@@ -40,14 +46,24 @@ def canny(image):
 def region_of_interest(image):
     height = image.shape[0] # Y axix -> 0
     #triangle = np.array([(200,height),(1100,height),(550,250)])
+    
+    #Note 
     polygon = np.array([[(200,height),(1100,height),(550,250)]])
 
     mask = np.zeros_like(image) # black image of image size
     # fill the mask with the given triangle/polynomial with white
     cv2.fillPoly(mask,polygon, 255)
-    return mask
+    # fillPoly take several polygon i,e array of array  [[(200,height),(1100,height),(550,250)]]
+    
+    # Now this mask image can be used in original image to get the area of concerned
+    # We can use bitwise & operator to do so
+    masked_image = cv2.bitwise_and(image, mask)
+    return masked_image
     
     
+    # Y = mx + b is the equation of lines
+    # On X-Y Plot for any given point infinite numbers of line can be drawn, which will have distinct m.n values as X,Y will be constant points
+    # If we plot m-n axis for all the lines on given points it will draw a line on M-N axis, this is called parametric space
     
     
     
@@ -56,7 +72,24 @@ def region_of_interest(image):
 
 lane_image = np.copy(image)
 canny = canny(lane_image)
-cv2.imshow("canny", region_of_interest(canny))
+cropped_image = region_of_interest(canny)
+lines = cv2.HoughLinesP(cropped_image, 2, np.pi/180, 100, np.array([]),minLineLength=50, maxLineGap=5)
+# 2 precisin
+# np.pi/180 is theta
+# 100 - threhold criteria in bin
+# np.array([]) - jsut a palce holder
+# minLineLength = 40 any line with less than 40 PX are rejected
+#  maxLineGap  This indicates the maximum distance in pixels between segmented lines which we will allow to be connected
+
+line_image = display_lines(lane_image,lines)
+
+# Add the lines
+# lane_image and line_image have same dimension and hence mergin this 2 image, original wit intensity 0.8 and lines image 1 so that line will be clearly visibale in 
+# the lane_image
+combo_image = cv2.addWeighted(lane_image,0.8, line_image, 1, 1)
+
+ 
+cv2.imshow("canny", combo_image)
 #plt.imshow(canny)
 #plt.show()
 cv2.waitKey(0)
